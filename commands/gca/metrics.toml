@@ -1,0 +1,5 @@
+prompt = """Show me GCA usage metrics for the last {{days}} days in the current project"""
+description = "Get Gemini Code Assist usage metrics"
+
+[arguments]
+days = { default = "28" }

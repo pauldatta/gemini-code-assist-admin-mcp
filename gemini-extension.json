@@ -1,0 +1,13 @@
+{
+  "name": "gca-admin-helper",
+  "version": "1.0.0",
+  "mcpServers": {
+    "gcaAdminServer": {
+      "command": "node",
+      "args": [
+        "${extensionPath}/dist/index.js"
+      ],
+      "cwd": "${extensionPath}"
+    }
+  }
+}

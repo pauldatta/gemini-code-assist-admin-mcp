@@ -1,0 +1,2 @@
+prompt = """Check GCA status for the current project"""
+description = "Check Gemini Code Assist status for the current project"

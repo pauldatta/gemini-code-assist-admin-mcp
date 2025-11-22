@@ -1,0 +1,2 @@
+prompt = """Am I an admin in the current project?"""
+description = "Check if you have admin permissions for Gemini Code Assist in the current project"
