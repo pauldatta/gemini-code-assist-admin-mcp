@@ -39,6 +39,50 @@ async function getProjectId(providedId?: string): Promise<string> {
     }
 }
 
+// Helper for MCP Sampling
+async function sampleMessage(server: any, prompt: string, systemPrompt?: string): Promise<string | null> {
+    try {
+        // Check if server has capabilities or if we can just try
+        // The SDK might not expose capabilities easily on the server instance, so we try/catch
+        const result = await server.server.request(
+            {
+                method: "sampling/createMessage",
+                params: {
+                    messages: [
+                        { role: "user", content: { type: "text", text: prompt } }
+                    ],
+                    systemPrompt: systemPrompt,
+                    maxTokens: 1024,
+                }
+            },
+            z.any() // Expect any response
+        );
+
+        if (result && result.content && result.content.type === 'text') {
+            return result.content.text;
+        }
+        return null;
+    } catch (error) {
+        // console.error("Sampling failed or not supported:", error);
+        return null;
+    }
+}
+
+// Helper for error handling with sampling
+async function handleToolError(server: any, error: any, context: string): Promise<{ content: { type: "text", text: string }[], isError: true }> {
+    const errorMessage = error.message || String(error);
+    const systemPrompt = "You are a helpful Google Cloud expert. Explain the error and suggest a fix.";
+    const prompt = `I encountered an error while ${context}:\n${errorMessage}\n\nPlease explain what went wrong and how to fix it.`;
+
+    const explanation = await sampleMessage(server, prompt, systemPrompt);
+    const text = explanation ? `Error: ${errorMessage}\n\nAnalysis:\n${explanation}` : `Error: ${errorMessage}`;
+
+    return {
+        content: [{ type: 'text', text }],
+        isError: true,
+    };
+}
+
 // Tool: check_gca_status
 server.tool(
     'check_gca_status',
@@ -59,13 +103,7 @@ server.tool(
                 }]
             };
         } catch (error: any) {
-            return {
-                content: [{
-                    type: 'text',
-                    text: `Error checking status: ${error.message}`
-                }],
-                isError: true,
-            };
+            return handleToolError(server, error, 'checking GCA status');
         }
     }
 );
@@ -172,10 +210,14 @@ server.tool(
                 }
 
                 if (!targetBillingAccount || !targetOrder) {
+                    const systemPrompt = "You are a helpful Google Cloud expert.";
+                    const prompt = "I could not automatically find a Gemini Code Assist license order. Please explain to the user how they can find their Billing Account ID and Order ID in the Google Cloud Console, and ask them to provide these manually.";
+                    const explanation = await sampleMessage(server, prompt, systemPrompt);
+
                     return {
                         content: [{
                             type: 'text',
-                            text: 'Could not automatically find a Gemini Code Assist or Duet AI license order. Please provide Billing Account ID and Order ID manually.'
+                            text: explanation || 'Could not automatically find a Gemini Code Assist or Duet AI license order. Please provide Billing Account ID and Order ID manually.'
                         }]
                     };
                 }
@@ -193,13 +235,7 @@ server.tool(
                 }]
             };
         } catch (error: any) {
-            return {
-                content: [{
-                    type: 'text',
-                    text: `Error listing licenses: ${error.message}`
-                }],
-                isError: true,
-            };
+            return handleToolError(server, error, 'listing licenses');
         }
     }
 );
@@ -233,13 +269,7 @@ server.tool(
                 }]
             };
         } catch (error: any) {
-            return {
-                content: [{
-                    type: 'text',
-                    text: `Error assigning license: ${error.message}`
-                }],
-                isError: true,
-            };
+            return handleToolError(server, error, 'assigning license');
         }
     }
 );
@@ -273,13 +303,7 @@ server.tool(
                 }]
             };
         } catch (error: any) {
-            return {
-                content: [{
-                    type: 'text',
-                    text: `Error unassigning license: ${error.message}`
-                }],
-                isError: true,
-            };
+            return handleToolError(server, error, 'unassigning license');
         }
     }
 );
@@ -310,20 +334,22 @@ server.tool(
                 }
             });
 
+            const summary = `Found ${uniqueUsers.size} unique users in the last ${days} days in project ${targetProject}.`;
+
+            // Try sampling for deeper analysis
+            const systemPrompt = "You are a data analyst. Summarize the usage trends based on the provided CSV data.";
+            const prompt = `Here is the GCA usage data (Date, UserID) for the last ${days} days:\n${stdout}\n\nPlease provide a brief summary of usage trends, such as active users per day or growth.`;
+
+            const analysis = await sampleMessage(server, prompt, systemPrompt);
+
             return {
                 content: [{
                     type: 'text',
-                    text: `Found ${uniqueUsers.size} unique users in the last ${days} days in project ${targetProject}.\n\nRaw Data:\n${stdout}`
+                    text: analysis ? `${summary}\n\nAnalysis:\n${analysis}\n\nRaw Data:\n${stdout}` : `${summary}\n\nRaw Data:\n${stdout}`
                 }]
             };
         } catch (error: any) {
-            return {
-                content: [{
-                    type: 'text',
-                    text: `Error getting metrics: ${error.message}`
-                }],
-                isError: true,
-            };
+            return handleToolError(server, error, 'getting metrics');
         }
     }
 );
@@ -348,13 +374,7 @@ server.tool(
                 }]
             };
         } catch (error: any) {
-            return {
-                content: [{
-                    type: 'text',
-                    text: `Error listing code repository indexes: ${error.message}`
-                }],
-                isError: true,
-            };
+            return handleToolError(server, error, 'listing code repository indexes');
         }
     }
 );
@@ -387,13 +407,7 @@ server.tool(
                 }]
             };
         } catch (error: any) {
-            return {
-                content: [{
-                    type: 'text',
-                    text: `Error creating code repository index: ${error.message}`
-                }],
-                isError: true,
-            };
+            return handleToolError(server, error, 'creating code repository index');
         }
     }
 );
@@ -427,13 +441,7 @@ server.tool(
                 }]
             };
         } catch (error: any) {
-            return {
-                content: [{
-                    type: 'text',
-                    text: `Error creating repository group: ${error.message}`
-                }],
-                isError: true,
-            };
+            return handleToolError(server, error, 'creating repository group');
         }
     }
 );
@@ -459,13 +467,7 @@ server.tool(
                 }]
             };
         } catch (error: any) {
-            return {
-                content: [{
-                    type: 'text',
-                    text: `Error listing repository groups: ${error.message}`
-                }],
-                isError: true,
-            };
+            return handleToolError(server, error, 'listing repository groups');
         }
     }
 );
@@ -492,13 +494,7 @@ server.tool(
                 }]
             };
         } catch (error: any) {
-            return {
-                content: [{
-                    type: 'text',
-                    text: `Error deleting repository group: ${error.message}`
-                }],
-                isError: true,
-            };
+            return handleToolError(server, error, 'deleting repository group');
         }
     }
 );
@@ -555,17 +551,7 @@ server.tool(
                 }]
             };
         } catch (error: any) {
-            let errorMessage = `Error granting access: ${error.message}`;
-            if (error.message.includes('PERMISSION_DENIED') || error.message.includes('403')) {
-                errorMessage += `\n\nNOTE: This operation requires Admin permissions on the repository group. Ensure you have the 'Code Repository Indexes Admin' role or similar.`;
-            }
-            return {
-                content: [{
-                    type: 'text',
-                    text: errorMessage
-                }],
-                isError: true,
-            };
+            return handleToolError(server, error, 'granting repository group access');
         }
     }
 );
@@ -621,17 +607,7 @@ server.tool(
                 }]
             };
         } catch (error: any) {
-            let errorMessage = `Error revoking access: ${error.message}`;
-            if (error.message.includes('PERMISSION_DENIED') || error.message.includes('403')) {
-                errorMessage += `\n\nNOTE: This operation requires Admin permissions on the repository group. Ensure you have the 'Code Repository Indexes Admin' role or similar.`;
-            }
-            return {
-                content: [{
-                    type: 'text',
-                    text: errorMessage
-                }],
-                isError: true,
-            };
+            return handleToolError(server, error, 'revoking repository group access');
         }
     }
 );
@@ -666,17 +642,33 @@ server.tool(
             ];
 
             const hasAdminRole = roles.some((role: string) => adminRoles.includes(role));
+            const rawData = {
+                is_admin: hasAdminRole,
+                current_user: currentUserEmail,
+                project: targetProject,
+                roles: roles,
+                admin_roles_checked: adminRoles
+            };
+
+            // Try sampling
+            const systemPrompt = "You are a helpful Google Cloud expert. Explain the user's permissions in the context of Gemini Code Assist administration.";
+            const prompt = `Here is the permission data for user ${currentUserEmail} in project ${targetProject}:\n${JSON.stringify(rawData, null, 2)}\n\nPlease explain what this user can and cannot do regarding Gemini Code Assist (GCA) management. Mention if they have admin privileges or if they are missing key roles.`;
+
+            const explanation = await sampleMessage(server, prompt, systemPrompt);
+
+            if (explanation) {
+                return {
+                    content: [{
+                        type: 'text',
+                        text: explanation
+                    }]
+                };
+            }
 
             return {
                 content: [{
                     type: 'text',
-                    text: JSON.stringify({
-                        is_admin: hasAdminRole,
-                        current_user: currentUserEmail,
-                        project: targetProject,
-                        roles: roles,
-                        admin_roles_checked: adminRoles
-                    }, null, 2)
+                    text: JSON.stringify(rawData, null, 2)
                 }]
             };
         } catch (error: any) {
