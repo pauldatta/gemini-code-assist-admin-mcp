@@ -1,0 +1,2 @@
+prompt = """Create a Gemini Code Assist code repository index"""
+description = "Create a new code repository index, optionally with CMEK"

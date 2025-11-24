@@ -359,6 +359,45 @@ server.tool(
     }
 );
 
+// Tool: create_code_repository_index
+server.tool(
+    'create_code_repository_index',
+    {
+        projectId: z.string().optional().describe('The Google Cloud Project ID. Defaults to current gcloud project.'),
+        location: z.string().default('us-central1').describe('The location (e.g., us-central1)'),
+        repositoryGroup: z.string().describe('The Repository Group ID to index'),
+        indexId: z.string().describe('The ID for the new index'),
+        kmsKey: z.string().optional().describe('The Cloud KMS key resource name for CMEK (optional)'),
+    },
+    async ({ projectId, location, repositoryGroup, indexId, kmsKey }) => {
+        try {
+            const targetProject = await getProjectId(projectId);
+            let command = `gcloud gemini code-repository-indexes create ${indexId} --project ${targetProject} --location ${location} --repository-group ${repositoryGroup}`;
+
+            if (kmsKey) {
+                command += ` --kms-key "${kmsKey}"`;
+            }
+
+            const { stdout } = await execAsync(command);
+
+            return {
+                content: [{
+                    type: 'text',
+                    text: stdout || `Code repository index ${indexId} creation initiated.`
+                }]
+            };
+        } catch (error: any) {
+            return {
+                content: [{
+                    type: 'text',
+                    text: `Error creating code repository index: ${error.message}`
+                }],
+                isError: true,
+            };
+        }
+    }
+);
+
 // Tool: check_admin_permissions
 server.tool(
     'check_admin_permissions',
