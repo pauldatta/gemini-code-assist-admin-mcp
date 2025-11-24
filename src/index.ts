@@ -398,6 +398,244 @@ server.tool(
     }
 );
 
+// Tool: create_repository_group
+server.tool(
+    'create_repository_group',
+    {
+        projectId: z.string().optional().describe('The Google Cloud Project ID. Defaults to current gcloud project.'),
+        location: z.string().default('us-central1').describe('The location (e.g., us-central1)'),
+        indexId: z.string().describe('The Code Repository Index ID'),
+        groupId: z.string().describe('The ID for the new Repository Group'),
+        repositories: z.array(z.object({
+            resource: z.string().describe('The Developer Connect repository resource name'),
+            branchPattern: z.string().describe('The branch pattern to index')
+        })).describe('List of repositories to include in the group'),
+    },
+    async ({ projectId, location, indexId, groupId, repositories }) => {
+        try {
+            const targetProject = await getProjectId(projectId);
+            const repoConfig = repositories.map(r => `resource=${r.resource},branchPattern=${r.branchPattern}`).join(',');
+
+            const command = `gcloud gemini code-repository-indexes repository-groups create ${groupId} --code-repository-index=${indexId} --project=${targetProject} --location=${location} --repositories=${repoConfig}`;
+
+            const { stdout } = await execAsync(command);
+
+            return {
+                content: [{
+                    type: 'text',
+                    text: stdout || `Repository group ${groupId} creation initiated.\n\nNext Step: Grant access to this group using the 'grant_repository_group_access' tool.`
+                }]
+            };
+        } catch (error: any) {
+            return {
+                content: [{
+                    type: 'text',
+                    text: `Error creating repository group: ${error.message}`
+                }],
+                isError: true,
+            };
+        }
+    }
+);
+
+// Tool: list_repository_groups
+server.tool(
+    'list_repository_groups',
+    {
+        projectId: z.string().optional().describe('The Google Cloud Project ID. Defaults to current gcloud project.'),
+        location: z.string().default('us-central1').describe('The location (e.g., us-central1)'),
+        indexId: z.string().describe('The Code Repository Index ID'),
+    },
+    async ({ projectId, location, indexId }) => {
+        try {
+            const targetProject = await getProjectId(projectId);
+            const command = `gcloud gemini code-repository-indexes repository-groups list --code-repository-index=${indexId} --project=${targetProject} --location=${location} --format="json"`;
+            const { stdout } = await execAsync(command);
+
+            return {
+                content: [{
+                    type: 'text',
+                    text: stdout
+                }]
+            };
+        } catch (error: any) {
+            return {
+                content: [{
+                    type: 'text',
+                    text: `Error listing repository groups: ${error.message}`
+                }],
+                isError: true,
+            };
+        }
+    }
+);
+
+// Tool: delete_repository_group
+server.tool(
+    'delete_repository_group',
+    {
+        projectId: z.string().optional().describe('The Google Cloud Project ID. Defaults to current gcloud project.'),
+        location: z.string().default('us-central1').describe('The location (e.g., us-central1)'),
+        indexId: z.string().describe('The Code Repository Index ID'),
+        groupId: z.string().describe('The Repository Group ID to delete'),
+    },
+    async ({ projectId, location, indexId, groupId }) => {
+        try {
+            const targetProject = await getProjectId(projectId);
+            const command = `gcloud gemini code-repository-indexes repository-groups delete ${groupId} --code-repository-index=${indexId} --project=${targetProject} --location=${location} -q`;
+            const { stdout } = await execAsync(command);
+
+            return {
+                content: [{
+                    type: 'text',
+                    text: stdout || `Repository group ${groupId} deleted.`
+                }]
+            };
+        } catch (error: any) {
+            return {
+                content: [{
+                    type: 'text',
+                    text: `Error deleting repository group: ${error.message}`
+                }],
+                isError: true,
+            };
+        }
+    }
+);
+
+// Tool: grant_repository_group_access
+server.tool(
+    'grant_repository_group_access',
+    {
+        projectId: z.string().optional().describe('The Google Cloud Project ID. Defaults to current gcloud project.'),
+        location: z.string().default('us-central1').describe('The location (e.g., us-central1)'),
+        indexId: z.string().describe('The Code Repository Index ID'),
+        groupId: z.string().describe('The Repository Group ID'),
+        email: z.string().email().describe('The email of the user to grant access to'),
+        role: z.string().default('roles/cloudaicompanion.repositoryGroupsUser').describe('The IAM role to grant'),
+    },
+    async ({ projectId, location, indexId, groupId, email, role }) => {
+        try {
+            const targetProject = await getProjectId(projectId);
+            // 1. Get current policy
+            const getPolicyCmd = `gcloud gemini code-repository-indexes repository-groups get-iam-policy ${groupId} --code-repository-index=${indexId} --project=${targetProject} --location=${location} --format="json"`;
+            const { stdout: policyJson } = await execAsync(getPolicyCmd);
+
+            // 2. Write policy to temp file (simulated by passing file content to set-iam-policy via stdin if supported, or using a temp file.
+            // gcloud set-iam-policy accepts a file path. We will use a temp file.)
+            const fs = require('fs');
+            const path = require('path');
+            const os = require('os');
+
+            const tempFilePath = path.join(os.tmpdir(), `iam-policy-${Date.now()}.json`);
+            let policy = JSON.parse(policyJson);
+
+            // Add binding
+            let binding = policy.bindings?.find((b: any) => b.role === role);
+            if (!binding) {
+                binding = { role: role, members: [] };
+                policy.bindings = [...(policy.bindings || []), binding];
+            }
+            if (!binding.members.includes(`user:${email}`)) {
+                binding.members.push(`user:${email}`);
+            }
+
+            fs.writeFileSync(tempFilePath, JSON.stringify(policy));
+
+            // 3. Set new policy
+            const setPolicyCmd = `gcloud gemini code-repository-indexes repository-groups set-iam-policy ${groupId} ${tempFilePath} --code-repository-index=${indexId} --project=${targetProject} --location=${location}`;
+            await execAsync(setPolicyCmd);
+
+            fs.unlinkSync(tempFilePath); // Cleanup
+
+            return {
+                content: [{
+                    type: 'text',
+                    text: `Granted ${role} to ${email} on repository group ${groupId}.`
+                }]
+            };
+        } catch (error: any) {
+            let errorMessage = `Error granting access: ${error.message}`;
+            if (error.message.includes('PERMISSION_DENIED') || error.message.includes('403')) {
+                errorMessage += `\n\nNOTE: This operation requires Admin permissions on the repository group. Ensure you have the 'Code Repository Indexes Admin' role or similar.`;
+            }
+            return {
+                content: [{
+                    type: 'text',
+                    text: errorMessage
+                }],
+                isError: true,
+            };
+        }
+    }
+);
+
+// Tool: revoke_repository_group_access
+server.tool(
+    'revoke_repository_group_access',
+    {
+        projectId: z.string().optional().describe('The Google Cloud Project ID. Defaults to current gcloud project.'),
+        location: z.string().default('us-central1').describe('The location (e.g., us-central1)'),
+        indexId: z.string().describe('The Code Repository Index ID'),
+        groupId: z.string().describe('The Repository Group ID'),
+        email: z.string().email().describe('The email of the user to revoke access from'),
+        role: z.string().default('roles/cloudaicompanion.repositoryGroupsUser').describe('The IAM role to revoke'),
+    },
+    async ({ projectId, location, indexId, groupId, email, role }) => {
+        try {
+            const targetProject = await getProjectId(projectId);
+            // 1. Get current policy
+            const getPolicyCmd = `gcloud gemini code-repository-indexes repository-groups get-iam-policy ${groupId} --code-repository-index=${indexId} --project=${targetProject} --location=${location} --format="json"`;
+            const { stdout: policyJson } = await execAsync(getPolicyCmd);
+
+            const fs = require('fs');
+            const path = require('path');
+            const os = require('os');
+
+            const tempFilePath = path.join(os.tmpdir(), `iam-policy-${Date.now()}.json`);
+            let policy = JSON.parse(policyJson);
+
+            // Remove binding
+            if (policy.bindings) {
+                const binding = policy.bindings.find((b: any) => b.role === role);
+                if (binding) {
+                    binding.members = binding.members.filter((m: string) => m !== `user:${email}`);
+                    if (binding.members.length === 0) {
+                        policy.bindings = policy.bindings.filter((b: any) => b.role !== role);
+                    }
+                }
+            }
+
+            fs.writeFileSync(tempFilePath, JSON.stringify(policy));
+
+            // 3. Set new policy
+            const setPolicyCmd = `gcloud gemini code-repository-indexes repository-groups set-iam-policy ${groupId} ${tempFilePath} --code-repository-index=${indexId} --project=${targetProject} --location=${location}`;
+            await execAsync(setPolicyCmd);
+
+            fs.unlinkSync(tempFilePath); // Cleanup
+
+            return {
+                content: [{
+                    type: 'text',
+                    text: `Revoked ${role} from ${email} on repository group ${groupId}.`
+                }]
+            };
+        } catch (error: any) {
+            let errorMessage = `Error revoking access: ${error.message}`;
+            if (error.message.includes('PERMISSION_DENIED') || error.message.includes('403')) {
+                errorMessage += `\n\nNOTE: This operation requires Admin permissions on the repository group. Ensure you have the 'Code Repository Indexes Admin' role or similar.`;
+            }
+            return {
+                content: [{
+                    type: 'text',
+                    text: errorMessage
+                }],
+                isError: true,
+            };
+        }
+    }
+);
+
 // Tool: check_admin_permissions
 server.tool(
     'check_admin_permissions',

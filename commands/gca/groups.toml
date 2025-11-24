@@ -1,0 +1,19 @@
+[create_group]
+prompt = """Create a Gemini Code Assist repository group"""
+description = "Create a new repository group within an index"
+
+[list_groups]
+prompt = """List Gemini Code Assist repository groups"""
+description = "List all repository groups in an index"
+
+[delete_group]
+prompt = """Delete a Gemini Code Assist repository group"""
+description = "Delete a repository group"
+
+[grant_access]
+prompt = """Grant access to a Gemini Code Assist repository group"""
+description = "Grant IAM role to a user for a repository group"
+
+[revoke_access]
+prompt = """Revoke access from a Gemini Code Assist repository group"""
+description = "Revoke IAM role from a user for a repository group"

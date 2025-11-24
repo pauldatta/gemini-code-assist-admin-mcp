@@ -31,6 +31,12 @@ This extension provides the following tools:
 | `unassign_license` | Unassigns a GCA license from a user. | "Unassign GCA license from `user@example.com`" |
 | `get_metrics` | Retrieves unique user counts from Cloud Logging. | "Show me GCA usage metrics for the last 28 days" |
 | `list_code_repository_indexes` | Lists code repository indexes. | "List code repository indexes in project `my-project`" |
+| `create_code_repository_index` | Creates a code repository index (supports CMEK). | "Create index `my-index` with CMEK key `projects/...`" |
+| `create_repository_group` | Creates a repository group. | "Create repository group `my-group` in index `my-index`" |
+| `list_repository_groups` | Lists repository groups. | "List repository groups in index `my-index`" |
+| `delete_repository_group` | Deletes a repository group. | "Delete repository group `my-group`" |
+| `grant_repository_group_access` | Grants access to a repository group. | "Grant access to `user@example.com` for group `my-group`" |
+| `revoke_repository_group_access` | Revokes access from a repository group. | "Revoke access from `user@example.com` for group `my-group`" |
 
 ## Custom Commands
 
@@ -39,6 +45,12 @@ This extension provides the following tools:
 | `/gca:status` | Checks GCA status for the current project. |
 | `/gca:admin` | Checks if you have admin permissions. |
 | `/gca:metrics` | Gets GCA usage metrics. |
+| `/gca:create_index` | Create a new code repository index. |
+| `/gca:create_group` | Create a new repository group. |
+| `/gca:list_groups` | List repository groups. |
+| `/gca:delete_group` | Delete a repository group. |
+| `/gca:grant_access` | Grant access to a repository group. |
+| `/gca:revoke_access` | Revoke access from a repository group. |
 
 ## Requirements
 
