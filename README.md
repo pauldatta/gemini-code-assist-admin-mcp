@@ -13,7 +13,11 @@ A Gemini CLI extension for managing Gemini Code Assist (GCA) licenses, checking 
     ```bash
     npm run build
     ```
-4.  **Link Extension**:
+4.  **Install Extension**:
+    ```bash
+    gemini extensions install .
+    ```
+    *Alternatively, for development:*
     ```bash
     gemini extensions link .
     ```
