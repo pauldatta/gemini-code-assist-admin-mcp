@@ -20,7 +20,7 @@ const server = new McpServer({
 // Helper function to run gcloud commands
 async function runGcloud(command: string): Promise<string> {
     try {
-        const { stdout } = await execAsync(`gcloud ${command}`);
+        const { stdout } = await execAsync(`gcloud ${command} -q`);
         return stdout.trim();
     } catch (error: any) {
         throw new Error(`gcloud command failed: ${error.message}`);
@@ -90,9 +90,45 @@ server.tool(
             if (!targetBillingAccount || !targetOrder) {
                 console.error('No Billing Account or Order ID provided. Attempting discovery...');
 
+                // 0. Ensure API is enabled
+                try {
+                    const apiCheck = await runGcloud(`services list --enabled --project ${targetProject} --filter="config.name:cloudcommerceconsumerprocurement.googleapis.com" --format="value(config.name)" -q`);
+                    if (apiCheck !== 'cloudcommerceconsumerprocurement.googleapis.com') {
+                        console.error(`Cloud Commerce Consumer Procurement API is not enabled in ${targetProject}. Skipping discovery using this project as quota project.`);
+                        // We cannot proceed with discovery using this project.
+                        // We could try to fall back to the user's default project if it's different, but for now we'll just warn.
+                    }
+                } catch (err) {
+                    console.error(`Failed to check API status in ${targetProject}:`, err);
+                }
+
                 // 1. List Billing Accounts
-                const billingAccountsJson = await runGcloud('beta billing accounts list --format="json"');
-                const billingAccounts = JSON.parse(billingAccountsJson);
+                let billingAccounts: any[] = [];
+                try {
+                    const billingAccountsJson = await runGcloud('beta billing accounts list --format="json"');
+                    billingAccounts = JSON.parse(billingAccountsJson);
+                } catch (err) {
+                    console.error('Failed to list billing accounts:', err);
+                }
+
+                // 2. Add Project's Billing Account (if not already in list)
+                try {
+                    const projectBillingJson = await runGcloud(`beta billing projects describe ${targetProject} --format="json"`);
+                    const projectBilling = JSON.parse(projectBillingJson);
+                    if (projectBilling.billingAccountName) {
+                        const projectAccountId = projectBilling.billingAccountName.split('/').pop();
+                        const exists = billingAccounts.some((a: any) => a.name.endsWith(projectAccountId));
+                        if (!exists) {
+                            console.error(`Adding project's billing account ${projectAccountId} to scan list.`);
+                            billingAccounts.push({
+                                name: projectBilling.billingAccountName,
+                                open: projectBilling.billingEnabled
+                            });
+                        }
+                    }
+                } catch (err) {
+                    console.error(`Failed to get billing info for project ${targetProject}:`, err);
+                }
 
                 for (const account of billingAccounts) {
                     if (!account.open) continue; // Skip closed accounts
@@ -103,7 +139,19 @@ server.tool(
                     try {
                         const ordersCommand = `curl -s -X GET -H "Authorization: Bearer ${token}" -H "X-Goog-User-Project: ${targetProject}" "${ordersUrl}"`;
                         const { stdout: ordersStdout } = await execAsync(ordersCommand);
-                        const ordersResponse = JSON.parse(ordersStdout);
+
+                        let ordersResponse;
+                        try {
+                            ordersResponse = JSON.parse(ordersStdout);
+                        } catch (e) {
+                            // If response is not JSON (e.g. HTML error), ignore
+                            continue;
+                        }
+
+                        if (ordersResponse.error) {
+                            console.error(`Error listing orders for account ${accountId}: ${ordersResponse.error.message}`);
+                            continue;
+                        }
 
                         if (ordersResponse.orders) {
                             for (const order of ordersResponse.orders) {
