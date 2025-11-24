@@ -14,9 +14,14 @@ A Gemini CLI extension for managing Gemini Code Assist (GCA) licenses, checking 
     npm run build
     ```
 4.  **Install Extension**:
-    ```bash
-    gemini extensions install .
-    ```
+    *   **From GitHub** (Recommended):
+        ```bash
+        gemini extensions install https://github.com/pauldatta/gemini-code-assist-extension
+        ```
+    *   **From Local Source** (For development):
+        ```bash
+        gemini extensions install .
+        ```
     *Alternatively, for development:*
     ```bash
     gemini extensions link .
