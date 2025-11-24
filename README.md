@@ -36,7 +36,19 @@ This extension provides the following tools:
 | `list_repository_groups` | Lists repository groups. | "List repository groups in index `my-index`" |
 | `delete_repository_group` | Deletes a repository group. | "Delete repository group `my-group`" |
 | `grant_repository_group_access` | Grants access to a repository group. | "Grant access to `user@example.com` for group `my-group`" |
+| `grant_repository_group_access` | Grants access to a repository group. | "Grant access to `user@example.com` for group `my-group`" |
 | `revoke_repository_group_access` | Revokes access from a repository group. | "Revoke access from `user@example.com` for group `my-group`" |
+| `list_developer_connect_connections` | Lists Developer Connect connections. | "List my Developer Connect connections" |
+| `create_developer_connect_connection` | Creates a Developer Connect connection. | "Create a GitHub connection named `my-conn` in `us-central1`" |
+| `link_git_repository` | Links a Git repository to a connection. | "Link `https://github.com/owner/repo` to connection `my-conn`" |
+
+## ✨ Features
+
+### 🧠 Intelligent Insights (MCP Sampling)
+This extension uses **MCP Sampling** to provide natural language explanations:
+-   **Error Analysis**: Explains `gcloud` errors in plain English and suggests fixes.
+-   **Permission Explanations**: Breaks down your IAM roles and what you can/cannot do.
+-   **Metric Summaries**: Analyzes usage trends from raw data.
 
 ## Custom Commands
 

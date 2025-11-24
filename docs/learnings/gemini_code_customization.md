@@ -20,7 +20,8 @@ The configuration file is a JSON array of objects, where each object represents 
 
 ### Fields
 - **`resource`**: The full resource name of the repository.
-  - Format: `//sourcerepo.googleapis.com/projects/PROJECT_ID/repos/REPOSITORY_ID`
+  - Format: `projects/PROJECT_ID/locations/LOCATION/connections/CONNECTION_ID/gitRepositoryLinks/LINK_ID`
+  - **Note**: You can use the `link_git_repository` tool to create these links.
 - **`branchPattern`**: A pipe-separated string of branch names or patterns to index.
   - Example: `main|dev` (indexes both `main` and `dev` branches)
   - Example: `dev` (indexes only the `dev` branch)

@@ -318,7 +318,7 @@ server.tool(
     async ({ projectId, days }) => {
         try {
             const targetProject = await getProjectId(projectId);
-            const filter = `resource.type=cloudaicompanion.googleapis.com/Instance labels.product=~"code_assist"`;
+            const filter = `resource.type="cloudaicompanion.googleapis.com/Instance" labels.user_id:*`;
             const format = `csv(timestamp.date('%Y-%m-%d'),labels.user_id)`;
             const command = `gcloud logging read '${filter}' --freshness ${days}d --project ${targetProject} --format "${format}"`;
 
@@ -608,6 +608,98 @@ server.tool(
             };
         } catch (error: any) {
             return handleToolError(server, error, 'revoking repository group access');
+        }
+    }
+);
+
+// Tool: list_developer_connect_connections
+server.tool(
+    'list_developer_connect_connections',
+    {
+        projectId: z.string().optional().describe('The Google Cloud Project ID. Defaults to current gcloud project.'),
+        location: z.string().default('us-central1').describe('The location (e.g., us-central1)'),
+    },
+    async ({ projectId, location }) => {
+        try {
+            const targetProject = await getProjectId(projectId);
+            const command = `gcloud developer-connect connections list --project ${targetProject} --location ${location} --format="json"`;
+            const { stdout } = await execAsync(command);
+
+            return {
+                content: [{
+                    type: 'text',
+                    text: stdout
+                }]
+            };
+        } catch (error: any) {
+            return handleToolError(server, error, 'listing Developer Connect connections');
+        }
+    }
+);
+
+// Tool: create_developer_connect_connection
+server.tool(
+    'create_developer_connect_connection',
+    {
+        projectId: z.string().optional().describe('The Google Cloud Project ID. Defaults to current gcloud project.'),
+        location: z.string().default('us-central1').describe('The location (e.g., us-central1)'),
+        connectionId: z.string().describe('The ID for the new connection'),
+        githubConfigAppInstallationId: z.string().optional().describe('The GitHub App Installation ID (required for GitHub connections)'),
+    },
+    async ({ projectId, location, connectionId, githubConfigAppInstallationId }) => {
+        try {
+            const targetProject = await getProjectId(projectId);
+            let command = `gcloud developer-connect connections create ${connectionId} --project ${targetProject} --location ${location}`;
+
+            if (githubConfigAppInstallationId) {
+                command += ` --github-config-app-installation-id=${githubConfigAppInstallationId}`;
+            } else {
+                // Default to interactive flow or error if not supported
+                // For now, we assume GitHub is the primary use case and warn if missing
+                // But we can also just run the command and let gcloud prompt (which might fail in non-interactive)
+                // Better to be explicit
+            }
+
+            // Note: This might trigger an interactive flow in the browser
+            const { stdout } = await execAsync(command);
+
+            return {
+                content: [{
+                    type: 'text',
+                    text: stdout || `Connection ${connectionId} creation initiated. Please check your browser if an authorization flow was triggered.`
+                }]
+            };
+        } catch (error: any) {
+            return handleToolError(server, error, 'creating Developer Connect connection');
+        }
+    }
+);
+
+// Tool: link_git_repository
+server.tool(
+    'link_git_repository',
+    {
+        projectId: z.string().optional().describe('The Google Cloud Project ID. Defaults to current gcloud project.'),
+        location: z.string().default('us-central1').describe('The location (e.g., us-central1)'),
+        connectionId: z.string().describe('The Developer Connect Connection ID'),
+        linkId: z.string().describe('The ID for the new Git repository link'),
+        gitRepositoryUri: z.string().describe('The URI of the Git repository (e.g., https://github.com/owner/repo.git)'),
+    },
+    async ({ projectId, location, connectionId, linkId, gitRepositoryUri }) => {
+        try {
+            const targetProject = await getProjectId(projectId);
+            const command = `gcloud developer-connect connections git-repository-links create ${linkId} --connection=${connectionId} --project=${targetProject} --location=${location} --git-repository-uri=${gitRepositoryUri}`;
+
+            const { stdout } = await execAsync(command);
+
+            return {
+                content: [{
+                    type: 'text',
+                    text: stdout || `Git repository link ${linkId} created successfully.`
+                }]
+            };
+        } catch (error: any) {
+            return handleToolError(server, error, 'linking Git repository');
         }
     }
 );

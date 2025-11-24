@@ -41,6 +41,8 @@ This document outlines how the **Model Context Protocol (MCP)** features—speci
     - Gracefully degrade if the client doesn't support these features (fallback to current behavior).
 
 ## Summary of Proposed Changes
-1.  **Modify `list_licenses`**: Implement fallback to `elicitation/requestInput` for missing IDs.
-2.  **Modify `check_admin_permissions`**: Add an optional `sampling` step to explain permissions if the client supports it.
-3.  **Global Error Handler**: Wrap tool executions to catch errors and optionally sample an explanation.
+## Summary of Proposed Changes
+- [x] **Modify `list_licenses`**: Fallback to `sampleMessage` for helpful instructions.
+- [x] **Modify `check_admin_permissions`**: Added `sampling` step to explain permissions.
+- [x] **Global Error Handler**: Wrapped tool executions to catch errors and sample explanations.
+- [x] **Metric Summaries**: Added `sampling` step to `get_metrics`.
