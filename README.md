@@ -27,6 +27,30 @@ A Gemini CLI extension for managing Gemini Code Assist (GCA) licenses, checking 
     gemini extensions link .
     ```
 
+## Using as an MCP Server in Antigravity
+
+You can add this extension as an MCP (Model Context Protocol) server to Antigravity by adding the following configuration to `~/.gemini/antigravity/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "gcaAdminServer": {
+      "command": "node",
+      "args": [
+        "<path-to-project>/dist/index.js"
+      ],
+      "cwd": "<path-to-project>/dist/",
+      "disabled": false
+    }
+  }
+}
+```
+
+Replace `<path-to-project>` with the absolute path to your cloned repository (e.g., `/Users/username/Code/gemini-code-assist-extension`).
+
+> [!NOTE]
+> Set `"disabled": true` if you want to temporarily disable the MCP server without removing the configuration.
+
 ## Tools
 
 This extension provides the following tools:
