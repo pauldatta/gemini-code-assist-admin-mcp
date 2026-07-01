@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * @license
  * Copyright 2025 Google LLC
@@ -10,6 +11,7 @@ import { registerAdminTools } from './tools/admin.js';
 import { registerLicenseTools } from './tools/license.js';
 import { registerRepoTools } from './tools/repo.js';
 import { registerMetricsTools } from './tools/metrics.js';
+import { runInteractiveInstaller } from './cli/installer.js';
 
 const server = new McpServer({
     name: 'gca-admin-helper',
@@ -23,6 +25,13 @@ registerRepoTools(server);
 registerMetricsTools(server);
 
 async function main() {
+    // If run via terminal (not as an MCP server), show interactive menu
+    // MCP clients usually don't have a TTY or provide specific args
+    if (process.stdout.isTTY && !process.argv.includes('--mcp')) {
+        const shouldStartServer = await runInteractiveInstaller();
+        if (!shouldStartServer) return;
+    }
+
     const transport = new StdioServerTransport();
     await server.connect(transport);
     console.error('GCA Admin Helper MCP Server running on stdio');

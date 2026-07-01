@@ -1,11 +1,20 @@
 {
     "name": "gca-admin-helper",
     "version": "1.0.0",
+    "type": "module",
     "description": "Gemini CLI extension for GCA management",
+    "bin": {
+        "gca-admin": "./dist/index.js"
+    },
+    "files": [
+        "dist",
+        "plugins",
+        ".agents"
+    ],
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {
-        "build": "tsc",
+        "build": "tsc && chmod +x dist/index.js",
         "start": "node dist/index.js",
         "lint": "eslint src --ext .ts",
         "format": "prettier --write 'src/**/*.ts'",
