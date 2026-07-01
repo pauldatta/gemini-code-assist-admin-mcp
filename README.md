@@ -27,20 +27,34 @@ A Gemini CLI extension for managing Gemini Code Assist (GCA) licenses, checking 
     gemini extensions link .
     ```
 
-## Using as an MCP Server in Antigravity
+## 🚀 Antigravity CLI Integration
 
-You can add this extension as an MCP (Model Context Protocol) server to Antigravity by adding the following configuration to `~/.gemini/antigravity/mcp_config.json`:
+This extension is fully optimized for **[Antigravity CLI](https://antigravity.google)**. It includes built-in agent skills and a portable plugin definition.
+
+### 🧠 Workspace Skill
+The repository includes a workspace-native skill in `.agents/skills/gca-admin.md`.
+- **Auto-Discovery**: When you run `agy` in this directory, the `/gca-admin` slash command is automatically available.
+- **Purpose**: Use this to quickly perform license audits or metric checks without leaving the agent context.
+
+### 📦 Portable Plugin
+The `plugins/gca-admin/` directory allows you to install this extension as a global plugin.
+- **Install**:
+  ```bash
+  agy plugin install ./plugins/gca-admin
+  ```
+- **Benefit**: This registers the MCP server and skills globally, making them available in all your workspaces.
+
+## Using as a Standalone MCP Server
+
+If you prefer to configure it manually in your global `mcp_config.json`:
 
 ```json
 {
   "mcpServers": {
-    "gcaAdminServer": {
+    "gca-admin-helper": {
       "command": "node",
-      "args": [
-        "<path-to-project>/dist/index.js"
-      ],
-      "cwd": "<path-to-project>/dist/",
-      "disabled": false
+      "args": ["dist/index.js"],
+      "cwd": "/path/to/gemini-code-assist-extension"
     }
   }
 }

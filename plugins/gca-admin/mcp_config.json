@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "gca-admin-helper": {
+      "command": "node",
+      "args": [
+        "dist/index.js"
+      ],
+      "cwd": "../../"
+    }
+  }
+}
