@@ -44,6 +44,14 @@ The `plugins/gca-admin/` directory allows you to install this extension as a glo
   ```
 - **Benefit**: This registers the MCP server and skills globally, making them available in all your workspaces.
 
+## 🤖 Claude Code & Other Assistants
+
+This repository is optimized for various AI coding assistants:
+
+- **Claude Code**: Includes a `CLAUDE.md` file that provides project-specific instructions and architecture notes for Claude.
+- **Antigravity / Gemini CLI**: Uses `AGENTS.md` and `.agents/skills/` for workspace-level intelligence.
+- **Standard MCP**: Can be used by any MCP-compliant client (Cursor, Windsurf, etc.) by pointing to `dist/index.js`.
+
 ## Using as a Standalone MCP Server
 
 If you prefer to configure it manually in your global `mcp_config.json`:
