@@ -6,6 +6,9 @@
 - **`gcloud` CLI** — authenticated with an account that has appropriate GCA admin roles
 - An AI assistant that supports MCP (Claude Code, Gemini CLI, Cursor, etc.)
 
+!!! tip "Available on npm"
+    `gemini-code-assist-admin-mcp` is published on [npmjs.com](https://www.npmjs.com/package/gemini-code-assist-admin-mcp) — no git clone needed.
+
 ---
 
 ## Option 1 — Interactive setup (recommended)
@@ -24,6 +27,15 @@ You'll see a menu like:
   Gemini CLI (settings.json)
   Antigravity / agy
   Manual (show config snippet)
+```
+
+## Option 2 — Global install
+
+If you prefer a persistent install with the short `gca-admin` alias:
+
+```bash
+npm install -g gemini-code-assist-admin-mcp
+gca-admin
 ```
 
 ---

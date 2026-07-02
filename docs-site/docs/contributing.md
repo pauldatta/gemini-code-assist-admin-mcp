@@ -45,6 +45,24 @@ docs-site/docs/   ← Documentation source (Markdown)
 3. Add tests in the corresponding `*.test.ts` file
 4. Document it in `docs-site/docs/reference/tools.md`
 
+## Publishing a new version
+
+Publishing is manual — no CI automation by design.
+
+```bash
+# bump version (inside mcp/)
+cd mcp && npm version patch   # or minor / major
+
+# publish to npm
+npm publish --access public --registry=https://registry.npmjs.org/
+
+# push commits + tag
+cd .. && git push && git push --tags
+```
+
+!!! note
+    You need to be logged in: `npm login --registry=https://registry.npmjs.org/`
+
 ## Submitting a PR
 
 - Run `npm run lint` and `npm test` before pushing

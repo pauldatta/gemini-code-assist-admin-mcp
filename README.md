@@ -34,21 +34,28 @@ docs/             ← Additional documentation
 
 ## Quick Start
 
-### Option 1 — npx (no install required)
+### Option 1 — npx (zero install)
 
 ```bash
 npx gemini-code-assist-admin-mcp
 ```
 
-This launches an interactive setup that lets you add the MCP server to your AI assistant config.
+Launches an interactive setup that patches your AI assistant's config automatically.
 
-### Option 2 — Gemini CLI extension
+### Option 2 — Global install
+
+```bash
+npm install -g gemini-code-assist-admin-mcp
+gca-admin   # short alias
+```
+
+### Option 3 — Gemini CLI extension
 
 ```bash
 gemini extensions install https://github.com/pauldatta/gemini-code-assist-admin-mcp
 ```
 
-### Option 3 — Manual MCP config
+### Option 4 — Manual MCP config
 
 Add this to your MCP client's config (Claude Desktop, Cursor, Windsurf, etc.):
 
@@ -137,9 +144,24 @@ npm test        # vitest
 npm run lint    # eslint
 ```
 
+### Publishing a new version (manual)
+
+Publishing is intentionally manual — no CI automation.
+
+```bash
+# 1. bump the version
+cd mcp && npm version patch   # or minor / major
+
+# 2. publish to npm
+npm publish --access public --registry=https://registry.npmjs.org/
+
+# 3. tag and push
+cd .. && git push && git push --tags
+```
+
 ### Project structure notes
 
-- **`mcp/`** is an independent npm package. It can be built, tested, and published standalone.
+- **`mcp/`** is an independent npm package ([npmjs.com/package/gemini-code-assist-admin-mcp](https://www.npmjs.com/package/gemini-code-assist-admin-mcp)). Build, test, and publish standalone.
 - **`plugins/gca-admin/`** is the Antigravity/Gemini CLI plugin definition. Its `mcp_config.json` references `mcp/dist/index.js`.
 - **`commands/gca/`** contains `.toml` command definitions for Gemini CLI slash commands.
 
