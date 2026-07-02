@@ -1,4 +1,9 @@
-# Gemini Code Assist Admin Toolkit
+# Gemini Code Assist Admin MCP
+
+[![CI](https://github.com/pauldatta/gemini-code-assist-admin-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/pauldatta/gemini-code-assist-admin-mcp/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/gemini-code-assist-admin-mcp?color=CB3837&logo=npm)](https://www.npmjs.com/package/gemini-code-assist-admin-mcp)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-0a66c2?logo=readthedocs)](https://pauldatta.github.io/gemini-code-assist-admin-mcp/)
 
 A toolkit for Google Cloud administrators to manage [Gemini Code Assist](https://cloud.google.com/gemini/docs/codeassist/overview) — licenses, metrics, and code repository indexing — directly from their AI coding assistant.
 
@@ -30,7 +35,7 @@ docs/             ← Additional documentation
 ### Option 1 — npx (no install required)
 
 ```bash
-npx gca-admin-mcp
+npx gemini-code-assist-admin-mcp
 ```
 
 This launches an interactive setup that lets you add the MCP server to your AI assistant config.
@@ -38,7 +43,7 @@ This launches an interactive setup that lets you add the MCP server to your AI a
 ### Option 2 — Gemini CLI extension
 
 ```bash
-gemini extensions install https://github.com/pauldatta/gemini-code-assist-extension
+gemini extensions install https://github.com/pauldatta/gemini-code-assist-admin-mcp
 ```
 
 ### Option 3 — Manual MCP config
@@ -50,7 +55,7 @@ Add this to your MCP client's config (Claude Desktop, Cursor, Windsurf, etc.):
   "mcpServers": {
     "gca-admin": {
       "command": "npx",
-      "args": ["-y", "gca-admin-mcp"]
+      "args": ["-y", "gemini-code-assist-admin-mcp"]
     }
   }
 }
@@ -64,7 +69,7 @@ Or if running from a local clone:
     "gca-admin": {
       "command": "node",
       "args": ["mcp/dist/index.js"],
-      "cwd": "/path/to/gemini-code-assist-extension"
+      "cwd": "/path/to/gemini-code-assist-admin-mcp"
     }
   }
 }

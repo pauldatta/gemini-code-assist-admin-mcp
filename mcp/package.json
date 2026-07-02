@@ -1,5 +1,5 @@
 {
-  "name": "gca-admin-mcp",
+  "name": "gemini-code-assist-admin-mcp",
   "version": "1.0.0",
   "type": "module",
   "description": "MCP server for Gemini Code Assist administration — license management, metrics, and repository indexing.",

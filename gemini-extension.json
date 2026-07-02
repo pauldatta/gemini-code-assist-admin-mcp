@@ -1,5 +1,5 @@
 {
-  "name": "gca-admin-helper",
+  "name": "gemini-code-assist-admin-mcp",
   "version": "1.0.0",
   "mcpServers": {
     "gcaAdminServer": {

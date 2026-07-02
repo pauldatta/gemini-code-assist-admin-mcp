@@ -1,0 +1,90 @@
+site_name: Gemini Code Assist Admin MCP
+site_description: MCP server for Gemini Code Assist administration — license management, metrics, and code repository indexing
+site_url: https://pauldatta.github.io/gemini-code-assist-admin-mcp/
+repo_url: https://github.com/pauldatta/gemini-code-assist-admin-mcp
+repo_name: pauldatta/gemini-code-assist-admin-mcp
+edit_uri: edit/main/docs-site/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Inter
+    code: JetBrains Mono
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotate
+    - content.code.copy
+
+plugins:
+  - search
+  - minify:
+      minify_html: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Quick Start: getting-started.md
+  - Integrations:
+    - Claude Code: integrations/claude-code.md
+    - Gemini CLI: integrations/gemini-cli.md
+    - Antigravity (agy): integrations/antigravity.md
+    - Cursor / Windsurf: integrations/cursor-windsurf.md
+    - Any MCP Client: integrations/generic-mcp.md
+  - Reference:
+    - All Tools: reference/tools.md
+    - Configuration: reference/configuration.md
+    - Requirements: reference/requirements.md
+  - Contributing: contributing.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/pauldatta/gemini-code-assist-admin-mcp
+    - icon: fontawesome/brands/npm
+      link: https://www.npmjs.com/package/gemini-code-assist-admin-mcp
+
+copyright: Copyright &copy; 2025 Paul Datta — Apache 2.0 License

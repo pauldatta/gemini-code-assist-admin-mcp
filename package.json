@@ -1,5 +1,5 @@
 {
-  "name": "gemini-code-assist-extension",
+  "name": "gemini-code-assist-admin-mcp",
   "version": "1.0.0",
   "private": true,
   "description": "Gemini Code Assist admin toolkit — MCP server, Gemini CLI commands, and Antigravity plugin.",

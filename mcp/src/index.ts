@@ -14,7 +14,7 @@ import { registerMetricsTools } from './tools/metrics.js';
 import { runInteractiveInstaller } from './cli/installer.js';
 
 const server = new McpServer({
-  name: 'gca-admin-helper',
+  name: 'gemini-code-assist-admin-mcp',
   version: '1.0.0',
 });
 
