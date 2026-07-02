@@ -5,6 +5,8 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-0a66c2?logo=readthedocs)](https://pauldatta.github.io/gemini-code-assist-admin-mcp/)
 
+**📖 Full documentation: [pauldatta.github.io/gemini-code-assist-admin-mcp](https://pauldatta.github.io/gemini-code-assist-admin-mcp/)**
+
 A toolkit for Google Cloud administrators to manage [Gemini Code Assist](https://cloud.google.com/gemini/docs/codeassist/overview) — licenses, metrics, and code repository indexing — directly from their AI coding assistant.
 
 ## What's in this repo
