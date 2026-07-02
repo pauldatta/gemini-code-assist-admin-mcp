@@ -1,6 +1,6 @@
 {
   "name": "gemini-code-assist-admin-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "MCP server for Gemini Code Assist administration — license management, metrics, and repository indexing.",
   "keywords": [
@@ -49,7 +49,7 @@
     "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.1",
+    "@modelcontextprotocol/sdk": "^1.22.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
