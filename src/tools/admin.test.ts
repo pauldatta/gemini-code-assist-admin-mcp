@@ -5,46 +5,49 @@ import * as gcloud from '../utils/gcloud.js';
 
 // Mock gcloud utils
 vi.mock('../utils/gcloud.js', () => ({
-    runGcloud: vi.fn(),
-    getProjectId: vi.fn(),
+  runGcloud: vi.fn(),
+  getProjectId: vi.fn(),
 }));
 
 const mockedGcloud = vi.mocked(gcloud);
 
+/**
+ * Helper to invoke a registered tool's callback directly.
+ * McpServer stores tools in `_registeredTools` as a plain object keyed by name,
+ * each having a `callback` function. This avoids needing a live transport.
+ */
+async function invokeTool(server: McpServer, toolName: string, args: Record<string, unknown>) {
+  const registered = (server as any)._registeredTools;
+  const tool = registered[toolName];
+  if (!tool) throw new Error(`Tool "${toolName}" not registered.`);
+  return tool.callback(args, {} /* extra */);
+}
+
 describe('Admin Tools', () => {
-    let server: McpServer;
+  let server: McpServer;
 
-    beforeEach(() => {
-        vi.clearAllMocks();
-        server = new McpServer({ name: 'test', version: '1.0.0' });
-        // We need to capture the tool registration
-        registerAdminTools(server);
-    });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    server = new McpServer({ name: 'test', version: '1.0.0' });
+    registerAdminTools(server);
+  });
 
-    it('check_gca_status returns ENABLED if API is found', async () => {
-        mockedGcloud.getProjectId.mockResolvedValue('test-project');
-        mockedGcloud.runGcloud.mockResolvedValue('cloudaicompanion.googleapis.com');
+  it('check_gca_status returns ENABLED if API is found', async () => {
+    mockedGcloud.getProjectId.mockResolvedValue('test-project');
+    mockedGcloud.runGcloud.mockResolvedValue('cloudaicompanion.googleapis.com');
 
-        // Manually trigger the tool logic (McpServer doesn't expose it easily for unit tests without a transport)
-        // In a real scenario, we'd use a TestTransport, but for unit tests we can check if the tool is registered
-        const tools = (server as any)._tools;
-        const tool = tools.get('check_gca_status');
-        
-        const result = await tool.execute({ projectId: 'test-project' });
-        
-        expect(result.content[0].text).toContain('ENABLED');
-        expect(result.content[0].text).toContain('test-project');
-    });
+    const result = await invokeTool(server, 'check_gca_status', { projectId: 'test-project' });
 
-    it('check_gca_status returns DISABLED if API is missing', async () => {
-        mockedGcloud.getProjectId.mockResolvedValue('test-project');
-        mockedGcloud.runGcloud.mockResolvedValue('');
+    expect(result.content[0].text).toContain('ENABLED');
+    expect(result.content[0].text).toContain('test-project');
+  });
 
-        const tools = (server as any)._tools;
-        const tool = tools.get('check_gca_status');
-        
-        const result = await tool.execute({ projectId: 'test-project' });
-        
-        expect(result.content[0].text).toContain('DISABLED');
-    });
+  it('check_gca_status returns DISABLED if API is missing', async () => {
+    mockedGcloud.getProjectId.mockResolvedValue('test-project');
+    mockedGcloud.runGcloud.mockResolvedValue('');
+
+    const result = await invokeTool(server, 'check_gca_status', { projectId: 'test-project' });
+
+    expect(result.content[0].text).toContain('DISABLED');
+  });
 });

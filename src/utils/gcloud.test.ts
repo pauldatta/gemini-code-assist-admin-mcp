@@ -5,65 +5,65 @@ import { EventEmitter } from 'events';
 
 // Mock child_process.spawn
 vi.mock('child_process', () => ({
-    spawn: vi.fn(),
+  spawn: vi.fn(),
 }));
 
 describe('gcloud utility', () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
-    });
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
-    it('runGcloud returns stdout on success', async () => {
-        const mockChild: any = new EventEmitter();
-        mockChild.stdout = new EventEmitter();
-        mockChild.stderr = new EventEmitter();
-        
-        (spawn as any).mockReturnValue(mockChild);
+  it('runGcloud returns stdout on success', async () => {
+    const mockChild: any = new EventEmitter();
+    mockChild.stdout = new EventEmitter();
+    mockChild.stderr = new EventEmitter();
 
-        const promise = runGcloud(['config', 'list']);
-        
-        mockChild.stdout.emit('data', 'project = my-project');
-        mockChild.emit('close', 0);
+    (spawn as any).mockReturnValue(mockChild);
 
-        const result = await promise;
-        expect(result).toBe('project = my-project');
-        expect(spawn).toHaveBeenCalledWith('gcloud', ['config', 'list', '-q']);
-    });
+    const promise = runGcloud(['config', 'list']);
 
-    it('runGcloud throws error on non-zero exit code', async () => {
-        const mockChild: any = new EventEmitter();
-        mockChild.stdout = new EventEmitter();
-        mockChild.stderr = new EventEmitter();
-        
-        (spawn as any).mockReturnValue(mockChild);
+    mockChild.stdout.emit('data', 'project = my-project');
+    mockChild.emit('close', 0);
 
-        const promise = runGcloud(['invalid', 'command']);
-        
-        mockChild.stderr.emit('data', 'unknown command');
-        mockChild.emit('close', 1);
+    const result = await promise;
+    expect(result).toBe('project = my-project');
+    expect(spawn).toHaveBeenCalledWith('gcloud', ['config', 'list', '-q']);
+  });
 
-        await expect(promise).rejects.toThrow('gcloud command failed with code 1: unknown command');
-    });
+  it('runGcloud throws error on non-zero exit code', async () => {
+    const mockChild: any = new EventEmitter();
+    mockChild.stdout = new EventEmitter();
+    mockChild.stderr = new EventEmitter();
 
-    it('getProjectId returns provided ID if present', async () => {
-        const result = await getProjectId('manual-id');
-        expect(result).toBe('manual-id');
-        expect(spawn).not.toHaveBeenCalled();
-    });
+    (spawn as any).mockReturnValue(mockChild);
 
-    it('getProjectId fetches from gcloud if not provided', async () => {
-        const mockChild: any = new EventEmitter();
-        mockChild.stdout = new EventEmitter();
-        mockChild.stderr = new EventEmitter();
-        
-        (spawn as any).mockReturnValue(mockChild);
+    const promise = runGcloud(['invalid', 'command']);
 
-        const promise = getProjectId();
-        
-        mockChild.stdout.emit('data', 'auto-project');
-        mockChild.emit('close', 0);
+    mockChild.stderr.emit('data', 'unknown command');
+    mockChild.emit('close', 1);
 
-        const result = await promise;
-        expect(result).toBe('auto-project');
-    });
+    await expect(promise).rejects.toThrow('gcloud command failed with code 1: unknown command');
+  });
+
+  it('getProjectId returns provided ID if present', async () => {
+    const result = await getProjectId('manual-id');
+    expect(result).toBe('manual-id');
+    expect(spawn).not.toHaveBeenCalled();
+  });
+
+  it('getProjectId fetches from gcloud if not provided', async () => {
+    const mockChild: any = new EventEmitter();
+    mockChild.stdout = new EventEmitter();
+    mockChild.stderr = new EventEmitter();
+
+    (spawn as any).mockReturnValue(mockChild);
+
+    const promise = getProjectId();
+
+    mockChild.stdout.emit('data', 'auto-project');
+    mockChild.emit('close', 0);
+
+    const result = await promise;
+    expect(result).toBe('auto-project');
+  });
 });
