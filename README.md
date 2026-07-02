@@ -1,125 +1,156 @@
-# GCA Admin Helper Extension
+# Gemini Code Assist Admin Toolkit
 
-A Gemini CLI extension for managing Gemini Code Assist (GCA) licenses, checking status, and viewing metrics.
+A toolkit for Google Cloud administrators to manage [Gemini Code Assist](https://cloud.google.com/gemini/docs/codeassist/overview) — licenses, metrics, and code repository indexing — directly from their AI coding assistant.
 
-## Installation
+## What's in this repo
 
-1.  **Clone or Download** this repository.
-2.  **Install Dependencies**:
-    ```bash
-    npm install
-    ```
-3.  **Build**:
-    ```bash
-    npm run build
-    ```
-4.  **Install Extension**:
-    *   **From GitHub** (Recommended):
-        ```bash
-        gemini extensions install https://github.com/pauldatta/gemini-code-assist-extension
-        ```
-    *   **From Local Source** (For development):
-        ```bash
-        gemini extensions install .
-        ```
-    *Alternatively, for development:*
-    ```bash
-    gemini extensions link .
-    ```
+```
+mcp/              ← MCP server (TypeScript, npm-published, npx-runnable)
+  src/
+    tools/        ← Tool implementations (admin, license, metrics, repo)
+    utils/        ← gcloud helpers, MCP sampling utilities
+    cli/          ← Interactive npx installer
+  dist/           ← Compiled output (generated, not committed)
 
-## 🚀 Antigravity CLI Integration
+commands/         ← Gemini CLI custom slash commands (/gca:status, etc.)
+  gca/
 
-This extension is fully optimized for **[Antigravity CLI](https://antigravity.google)**. It includes built-in agent skills and a portable plugin definition.
+plugins/          ← Antigravity / Gemini CLI portable plugin
+  gca-admin/
+    plugin.json
+    mcp_config.json
 
-### 🧠 Workspace Skill
-The repository includes a workspace-native skill in `.agents/skills/gca-admin.md`.
-- **Auto-Discovery**: When you run `agy` in this directory, the `/gca-admin` slash command is automatically available.
-- **Purpose**: Use this to quickly perform license audits or metric checks without leaving the agent context.
+docs/             ← Additional documentation
+  user_guide.md
+  mcp_test_plan.md
+```
 
-### 📦 Portable Plugin
-The `plugins/gca-admin/` directory allows you to install this extension as a global plugin.
-- **Install**:
-  ```bash
-  agy plugin install ./plugins/gca-admin
-  ```
-- **Benefit**: This registers the MCP server and skills globally, making them available in all your workspaces.
+## Quick Start
 
-## 🤖 Claude Code & Other Assistants
+### Option 1 — npx (no install required)
 
-This repository is optimized for various AI coding assistants:
+```bash
+npx gca-admin-mcp
+```
 
-- **Claude Code**: Includes a `CLAUDE.md` file that provides project-specific instructions and architecture notes for Claude.
-- **Antigravity / Gemini CLI**: Uses `AGENTS.md` and `.agents/skills/` for workspace-level intelligence.
-- **Standard MCP**: Can be used by any MCP-compliant client (Cursor, Windsurf, etc.) by pointing to `dist/index.js`.
+This launches an interactive setup that lets you add the MCP server to your AI assistant config.
 
-## Using as a Standalone MCP Server
+### Option 2 — Gemini CLI extension
 
-If you prefer to configure it manually in your global `mcp_config.json`:
+```bash
+gemini extensions install https://github.com/pauldatta/gemini-code-assist-extension
+```
+
+### Option 3 — Manual MCP config
+
+Add this to your MCP client's config (Claude Desktop, Cursor, Windsurf, etc.):
 
 ```json
 {
   "mcpServers": {
-    "gca-admin-helper": {
+    "gca-admin": {
+      "command": "npx",
+      "args": ["-y", "gca-admin-mcp"]
+    }
+  }
+}
+```
+
+Or if running from a local clone:
+
+```json
+{
+  "mcpServers": {
+    "gca-admin": {
       "command": "node",
-      "args": ["dist/index.js"],
+      "args": ["mcp/dist/index.js"],
       "cwd": "/path/to/gemini-code-assist-extension"
     }
   }
 }
 ```
 
-Replace `<path-to-project>` with the absolute path to your cloned repository (e.g., `/Users/username/Code/gemini-code-assist-extension`).
+---
 
-> [!NOTE]
-> Set `"disabled": true` if you want to temporarily disable the MCP server without removing the configuration.
+## MCP Tools
 
-## Tools
+| Tool | Description | Example prompt |
+|------|-------------|----------------|
+| `check_gca_status` | Checks if the GCA API is enabled in a project | _"Is GCA enabled in my-project?"_ |
+| `check_admin_permissions` | Verifies your IAM admin roles | _"Do I have GCA admin rights?"_ |
+| `list_licenses` | Lists all assigned GCA licenses | _"Who has GCA licenses in billing account X?"_ |
+| `assign_license` | Assigns a license to a user | _"Give a GCA license to user@example.com"_ |
+| `unassign_license` | Removes a license from a user | _"Remove GCA license from user@example.com"_ |
+| `get_metrics` | Retrieves unique active user counts from Cloud Logging | _"Show GCA usage for the last 28 days"_ |
+| `list_code_repository_indexes` | Lists code repository indexes | _"List indexes in my-project"_ |
+| `create_code_repository_index` | Creates a code index (supports CMEK) | _"Create index my-index with key projects/..."_ |
+| `create_repository_group` | Creates a repository group | _"Create group my-group in index my-index"_ |
+| `list_repository_groups` | Lists repository groups | _"List groups in my-index"_ |
+| `delete_repository_group` | Deletes a repository group | _"Delete group my-group"_ |
+| `grant_repository_group_access` | Grants user access to a group | _"Grant user@example.com access to my-group"_ |
+| `revoke_repository_group_access` | Revokes user access from a group | _"Revoke user@example.com from my-group"_ |
+| `list_developer_connect_connections` | Lists Developer Connect connections | _"List my Developer Connect connections"_ |
+| `create_developer_connect_connection` | Creates a Developer Connect connection | _"Create a GitHub connection in us-central1"_ |
+| `link_git_repository` | Links a Git repo to a Developer Connect connection | _"Link github.com/owner/repo to my-conn"_ |
 
-This extension provides the following tools:
-
-| Tool Name | Description | Example Prompt |
-| :--- | :--- | :--- |
-| `check_gca_status` | Checks if GCA API is enabled and verifies IAM roles. | "Check GCA status for project `my-project`" |
-| `check_admin_permissions` | Checks if current user has admin roles. | "Am I an admin in project `my-project`?" |
-| `list_licenses` | Lists users with GCA licenses. | "List GCA licenses for billing account `X` and order `Y`" |
-| `assign_license` | Assigns a GCA license to a user. | "Assign GCA license to `user@example.com`" |
-| `unassign_license` | Unassigns a GCA license from a user. | "Unassign GCA license from `user@example.com`" |
-| `get_metrics` | Retrieves unique user counts from Cloud Logging. | "Show me GCA usage metrics for the last 28 days" |
-| `list_code_repository_indexes` | Lists code repository indexes. | "List code repository indexes in project `my-project`" |
-| `create_code_repository_index` | Creates a code repository index (supports CMEK). | "Create index `my-index` with CMEK key `projects/...`" |
-| `create_repository_group` | Creates a repository group. | "Create repository group `my-group` in index `my-index`" |
-| `list_repository_groups` | Lists repository groups. | "List repository groups in index `my-index`" |
-| `delete_repository_group` | Deletes a repository group. | "Delete repository group `my-group`" |
-| `grant_repository_group_access` | Grants access to a repository group. | "Grant access to `user@example.com` for group `my-group`" |
-| `grant_repository_group_access` | Grants access to a repository group. | "Grant access to `user@example.com` for group `my-group`" |
-| `revoke_repository_group_access` | Revokes access from a repository group. | "Revoke access from `user@example.com` for group `my-group`" |
-| `list_developer_connect_connections` | Lists Developer Connect connections. | "List my Developer Connect connections" |
-| `create_developer_connect_connection` | Creates a Developer Connect connection. | "Create a GitHub connection named `my-conn` in `us-central1`" |
-| `link_git_repository` | Links a Git repository to a connection. | "Link `https://github.com/owner/repo` to connection `my-conn`" |
-
-## ✨ Features
-
-### 🧠 Intelligent Insights (MCP Sampling)
-This extension uses **MCP Sampling** to provide natural language explanations:
--   **Error Analysis**: Explains `gcloud` errors in plain English and suggests fixes.
--   **Permission Explanations**: Breaks down your IAM roles and what you can/cannot do.
--   **Metric Summaries**: Analyzes usage trends from raw data.
-
-## Custom Commands
+## Custom Commands (Gemini CLI)
 
 | Command | Description |
-| :--- | :--- |
-| `/gca:status` | Checks GCA status for the current project. |
-| `/gca:admin` | Checks if you have admin permissions. |
-| `/gca:metrics` | Gets GCA usage metrics. |
-| `/gca:create_index` | Create a new code repository index. |
-| `/gca:create_group` | Create a new repository group. |
-| `/gca:list_groups` | List repository groups. |
-| `/gca:delete_group` | Delete a repository group. |
-| `/gca:grant_access` | Grant access to a repository group. |
-| `/gca:revoke_access` | Revoke access from a repository group. |
+|---------|-------------|
+| `/gca:status` | Check GCA API and IAM status |
+| `/gca:admin` | Check your admin permissions |
+| `/gca:metrics` | Show usage metrics |
+| `/gca:create_index` | Create a code repository index |
+| `/gca:create_group` | Create a repository group |
+| `/gca:list_groups` | List repository groups |
+| `/gca:delete_group` | Delete a repository group |
+| `/gca:grant_access` | Grant access to a repository group |
+| `/gca:revoke_access` | Revoke access from a repository group |
+
+## Intelligent Error Analysis
+
+All tools use **MCP Sampling** to explain `gcloud` errors in plain English and suggest fixes — you see context-aware guidance instead of raw stack traces.
+
+---
+
+## For Developers
+
+### Prerequisites
+
+- Node.js 20+
+- `gcloud` CLI installed and authenticated (`gcloud auth login`, `gcloud auth application-default login`)
+
+### Build & test
+
+```bash
+cd mcp
+npm install
+npm run build   # compile TypeScript → dist/
+npm test        # vitest
+npm run lint    # eslint
+```
+
+### Project structure notes
+
+- **`mcp/`** is an independent npm package. It can be built, tested, and published standalone.
+- **`plugins/gca-admin/`** is the Antigravity/Gemini CLI plugin definition. Its `mcp_config.json` references `mcp/dist/index.js`.
+- **`commands/gca/`** contains `.toml` command definitions for Gemini CLI slash commands.
+
+### Antigravity / Gemini CLI Plugin
+
+Install globally so it's available in all workspaces:
+
+```bash
+agy plugin install ./plugins/gca-admin
+```
+
+The workspace also includes `.agents/skills/` for auto-discovery when you run `agy` in this directory.
+
+---
 
 ## Requirements
 
-- `gcloud` CLI installed and authenticated.
-- Appropriate IAM roles (e.g., `roles/cloudaicompanion.admin`, `roles/serviceusage.serviceUsageConsumer`).
+- `gcloud` CLI, authenticated with appropriate IAM roles
+- For license management: `roles/cloudaicompanion.admin` or `roles/cloudaicompanion.viewer`
+- For metrics: `roles/logging.viewer`
+- For repository indexing: `roles/cloudaicompanion.admin`

@@ -1,5 +1,7 @@
 node_modules/
 dist/
+mcp/node_modules/
+mcp/dist/
 .DS_Store
-
 output.txt
+*.js.map
