@@ -3,11 +3,39 @@
   "version": "1.0.0",
   "type": "module",
   "description": "MCP server for Gemini Code Assist administration — license management, metrics, and repository indexing.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "gemini",
+    "google-cloud",
+    "gemini-code-assist",
+    "gca",
+    "admin",
+    "ai",
+    "claude",
+    "cursor"
+  ],
+  "license": "Apache-2.0",
+  "author": "Paul Datta",
+  "homepage": "https://pauldatta.github.io/gemini-code-assist-admin-mcp/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pauldatta/gemini-code-assist-admin-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pauldatta/gemini-code-assist-admin-mcp/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "bin": {
-    "gca-admin": "./dist/index.js"
+    "gemini-code-assist-admin-mcp": "dist/index.js",
+    "gca-admin": "dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -17,7 +45,8 @@
     "lint": "eslint src --ext .ts",
     "format": "prettier --write 'src/**/*.ts'",
     "test": "vitest run",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.1",
